@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuiteCRM Website - Demo with Chatbot</title>
+    <style>
+        /* Demo website styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        header {
+            background: #1f4e79;
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #1f4e79;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .cta-button {
+            background: #1f4e79;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .cta-button:hover {
+            background: #2c5f8c;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .feature-card h3 {
+            color: #1f4e79;
+            margin-bottom: 1rem;
+        }
+
+        .demo-notice {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 2px solid #2196f3;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .demo-notice h3 {
+            color: #1565c0;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-notice p {
+            color: #1976d2;
+            margin-bottom: 1rem;
+        }
+
+        .demo-notice code {
+            background: #fff;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            color: #c62828;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">🏢 SuiteCRM</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#accounts">Accounts</a></li>
+                <li><a href="#contacts">Contacts</a></li>
+                <li><a href="#reports">Reports</a></li>
+                <li><a href="#admin">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Demo Notice -->
+        <div class="demo-notice">
+            <h3>🤖 AI Assistant Demo</h3>
+            <p>This page demonstrates the SuiteCRM chatbot integration. Look for the chat button in the bottom-right corner!</p>
+            <p>Try asking: <code>"Create an account for ABC Corp"</code> or <code>"Search for tech companies"</code></p>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>Welcome to SuiteCRM</h1>
+            <p>Your complete customer relationship management solution with AI-powered assistance</p>
+            <button class="cta-button" onclick="openChatDemo()">Try AI Assistant</button>
+        </section>
+
+        <!-- Features Grid -->
+        <section class="features">
+            <div class="feature-card">
+                <h3>📊 Account Management</h3>
+                <p>Manage your customer accounts with ease. Create, update, and track all your business relationships in one place.</p>
+                <p><strong>Now with AI assistance!</strong> Simply ask: "Create an account for XYZ Company" and let our chatbot help you.</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>🔍 Smart Search</h3>
+                <p>Find accounts, contacts, and opportunities quickly with our powerful search functionality.</p>
+                <p><strong>Try natural language search!</strong> Ask: "Find all accounts in the healthcare industry" and get instant results.</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>📈 Reporting & Analytics</h3>
+                <p>Generate detailed reports and gain insights into your sales performance and customer data.</p>
+                <p><strong>Coming soon:</strong> AI-powered report generation and data analysis through chat commands.</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>🤖 AI Assistant</h3>
+                <p>Our new AI-powered chatbot helps you manage accounts using natural language commands.</p>
+                <ul style="margin-top: 1rem; text-align: left;">
+                    <li>Create accounts instantly</li>
+                    <li>Search with natural language</li>
+                    <li>Get account information</li>
+                    <li>Update records easily</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>📱 Mobile Ready</h3>
+                <p>Access your CRM data from anywhere with our responsive design and mobile-friendly interface.</p>
+                <p>The AI assistant works seamlessly on mobile devices too!</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>🔒 Secure & Reliable</h3>
+                <p>Enterprise-grade security with role-based access control and data encryption.</p>
+                <p>All AI interactions are secure and respect your data privacy policies.</p>
+            </div>
+        </section>
+
+        <!-- Sample Data Section -->
+        <section style="background: white; padding: 2rem; border-radius: 12px; margin: 2rem 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h2 style="color: #1f4e79; margin-bottom: 1rem;">Recent Accounts</h2>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                            <th style="padding: 1rem; text-align: left;">Account Name</th>
+                            <th style="padding: 1rem; text-align: left;">Industry</th>
+                            <th style="padding: 1rem; text-align: left;">Phone</th>
+                            <th style="padding: 1rem; text-align: left;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #dee2e6;">
+                            <td style="padding: 1rem;">TechStart Solutions</td>
+                            <td style="padding: 1rem;">Technology</td>
+                            <td style="padding: 1rem;">555-0123</td>
+                            <td style="padding: 1rem;"><span style="background: #d4edda; color: #155724; padding: 0.25rem 0.5rem; border-radius: 4px;">Active</span></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #dee2e6;">
+                            <td style="padding: 1rem;">Global Manufacturing</td>
+                            <td style="padding: 1rem;">Manufacturing</td>
+                            <td style="padding: 1rem;">313-555-7890</td>
+                            <td style="padding: 1rem;"><span style="background: #d4edda; color: #155724; padding: 0.25rem 0.5rem; border-radius: 4px;">Active</span></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #dee2e6;">
+                            <td style="padding: 1rem;">Healthcare Plus</td>
+                            <td style="padding: 1rem;">Healthcare</td>
+                            <td style="padding: 1rem;">555-9876</td>
+                            <td style="padding: 1rem;"><span style="background: #fff3cd; color: #856404; padding: 0.25rem 0.5rem; border-radius: 4px;">Pending</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="margin-top: 1rem; color: #666;">
+                💡 <strong>Pro tip:</strong> Ask the AI assistant "Show me details for TechStart Solutions" or "Search for healthcare accounts"
+            </p>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 SuiteCRM. Enhanced with AI-powered assistance.</p>
+        <p style="margin-top: 0.5rem; opacity: 0.8;">Chatbot powered by LangGraph & OpenAI</p>
+    </footer>
+
+    <!-- Chat Widget Integration -->
+    <script>
+        // Configuration for the chat widget
+        window.SUITECRM_CHAT_CONFIG = {
+            apiUrl: 'http://localhost:8000', // Your FastAPI server URL
+            position: 'bottom-right',
+            autoOpen: false,
+            welcomeMessage: true,
+            persistent: true
+        };
+
+        // Function to open chat from CTA button
+        function openChatDemo() {
+            // Check if chat widget exists
+            const chatFab = document.getElementById('chatFab');
+            if (chatFab) {
+                chatFab.click();
+            } else {
+                alert('Chat widget is loading... Please try again in a moment, or click the chat button in the bottom-right corner.');
+            }
+        }
+
+        // Simulated chat widget (replace with actual embed_snippet.js)
+        (function() {
+            // This is a simplified version for demo purposes
+            // In production, you would include the full embed_snippet.js
+            
+            const chatHTML = `
+                <div style="position: fixed; bottom: 20px; right: 20px; z-index: 999999;">
+                    <div id="chatFab" style="
+                        width: 60px; height: 60px; border-radius: 50%; 
+                        background: linear-gradient(135deg, #1f4e79 0%, #2c5f8c 100%);
+                        border: none; color: white; cursor: pointer;
+                        display: flex; align-items: center; justify-content: center;
+                        font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        transition: all 0.3s ease;
+                    " onclick="showChatDemo()">
+                        💬
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', chatHTML);
+        })();
+
+        function showChatDemo() {
+            alert(`🤖 SuiteCRM AI Assistant (Demo)
+
+This is a demonstration of the chat widget integration.
+
+In the actual implementation, you would:
+1. Click this button to open the chat interface
+2. Type natural language commands like:
+   • "Create an account for ABC Corp"
+   • "Search for technology companies"
+   • "What fields can I use for accounts?"
+   • "Show me account details for ID xyz-123"
+
+The chatbot connects directly to your SuiteCRM instance via the REST API and can perform real account operations.
+
+To see the full functionality, run the actual chatbot server and replace this demo with the real embed_snippet.js file.`);
+        }
+
+        // Add hover effect to chat button
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatFab = document.getElementById('chatFab');
+            if (chatFab) {
+                chatFab.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.1)';
+                    this.style.boxShadow = '0 6px 20px rgba(0,0,0,0.4)';
+                });
+                
+                chatFab.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                    this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,4 +1,8 @@
 <?php
+// Suppress PHP warnings/notices for clean API responses
+error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);
+ini_set('display_errors', '0');
+
 // Swagger needs this, but should remove - CORS
 header("Access-Control-Allow-Origin: *");
 header('Access-Control-Allow-Methods: POST, PATCH, GET, OPTIONS, PUT, DELETE');
