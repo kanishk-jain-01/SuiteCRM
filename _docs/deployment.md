@@ -47,11 +47,11 @@ This document provides a comprehensive guide for modernizing and deploying the S
 │           │                       │                         │
 │           └───────────────────────┼─────────────────────────│
 │                                   │                         │
-│  ┌─────────────────┐    ┌─────────────────┐                 │
-│  │     Database    │    │     Redis       │                 │
-│  │  (MySQL/MariaDB)│    │   (Caching)     │                 │
-│  │   Port: 3306    │    │   Port: 6379    │                 │
-│  └─────────────────┘    └─────────────────┘                 │
+│  ┌─────────────────┐                                        │
+│  │     Database    │                                        │
+│  │  (MySQL/MariaDB)│                                        │
+│  │   Port: 3306    │                                        │
+│  └─────────────────┘                                        │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────────┐ │
 │  │                    Nginx Reverse Proxy                  │ │
@@ -91,16 +91,7 @@ This document provides a comprehensive guide for modernizing and deploying the S
   - Automated backups
   - Performance monitoring
 
-#### 4. Redis Container
-- **Base Image**: `redis:7-alpine`
-- **Purpose**: Caching and session management
-- **Key Features**:
-  - Memory optimization
-  - Persistence configuration
-  - Cluster-ready setup
-  - Performance metrics
-
-#### 5. Nginx Container
+#### 4. Nginx Container
 - **Base Image**: `nginx:alpine`
 - **Purpose**: Reverse proxy and load balancer
 - **Key Features**:
@@ -137,7 +128,6 @@ services:
       - CHATBOT_API_URL=http://chatbot:8000
     depends_on:
       - database
-      - redis
     volumes:
       - suitecrm_data:/var/www/html/upload
       - suitecrm_logs:/var/www/html/logs
@@ -148,9 +138,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - SUITECRM_BASE_URL=http://suitecrm/Api/V8
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - redis
+      - LOG_LEVEL=INFO
     volumes:
       - chatbot_logs:/app/logs
 
@@ -167,20 +155,11 @@ services:
     ports:
       - "3306:3306"
 
-  redis:
-    image: redis:7-alpine
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-
 volumes:
   suitecrm_data:
   suitecrm_logs:
   chatbot_logs:
   db_data:
-  redis_data:
 ```
 
 ## Terraform Infrastructure
@@ -229,7 +208,6 @@ volumes:
 
 #### Data Storage
 - **RDS MySQL**: Managed database with Multi-AZ deployment
-- **ElastiCache Redis**: Managed caching layer
 - **EFS**: Shared file system for SuiteCRM uploads
 - **S3**: Static assets and backup storage
 
@@ -254,10 +232,6 @@ terraform/
 │   │   ├── variables.tf
 │   │   └── outputs.tf
 │   ├── rds/
-│   │   ├── main.tf
-│   │   ├── variables.tf
-│   │   └── outputs.tf
-│   ├── elasticache/
 │   │   ├── main.tf
 │   │   ├── variables.tf
 │   │   └── outputs.tf
@@ -597,7 +571,6 @@ async def health_check():
         "timestamp": datetime.now().isoformat(),
         "version": app.version,
         "database": await check_database_connection(),
-        "redis": await check_redis_connection(),
         "suitecrm_api": await check_suitecrm_api()
     }
 ```
@@ -665,17 +638,15 @@ async def health_check():
 #### Staging Environment
 - **ECS Fargate (minimal capacity)** - ~$30/month
 - **RDS t3.micro** - ~$15/month
-- **ElastiCache t3.micro** - ~$15/month
 - **Application Load Balancer** - ~$20/month
-- **Total Staging** - ~$80/month
+- **Total Staging** - ~$65/month
 
 #### Production Environment
 - **ECS Fargate (auto-scaling)** - ~$100-200/month
 - **RDS r5.large (Multi-AZ)** - ~$150/month
-- **ElastiCache r5.large** - ~$100/month
 - **Application Load Balancer** - ~$20/month
 - **Data transfer and storage** - ~$50/month
-- **Total Production** - ~$420-520/month
+- **Total Production** - ~$320-420/month
 
 ### Cost Optimization Techniques
 - **Spot instances for development**
@@ -783,7 +754,7 @@ terraform import aws_instance.example i-1234567890abcdef0
 - **Regular maintenance** and statistics updates
 
 #### Application Optimization
-- **Caching strategies** with Redis
+- **In-memory caching** for frequent data
 - **Async processing** for long-running tasks
 - **Load balancing** for distributed workloads
 - **CDN integration** for static assets
