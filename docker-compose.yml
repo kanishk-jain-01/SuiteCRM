@@ -1,0 +1,99 @@
+services:
+  database:
+    image: mysql:8.0
+    container_name: suitecrm_database
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-rootpass123}
+      - MYSQL_DATABASE=suitecrm
+      - MYSQL_USER=${DB_USER:-suitecrm}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-dev_suite_123}
+      - MYSQL_CHARSET=utf8mb4
+      - MYSQL_COLLATION=utf8mb4_unicode_ci
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/mysql/conf.d:/etc/mysql/conf.d:ro
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - suitecrm_network
+
+  suitecrm:
+    build:
+      context: .
+      dockerfile: ./docker/suitecrm/Dockerfile
+    container_name: suitecrm_app
+    environment:
+      - DB_HOST=database
+      - DB_NAME=suitecrm
+      - DB_USER=${DB_USER:-suitecrm}
+      - DB_PASSWORD=${DB_PASSWORD:-dev_suite_123}
+      - CHATBOT_API_URL=http://chatbot:8000
+      - PHP_MEMORY_LIMIT=512M
+      - PHP_UPLOAD_MAX_FILESIZE=50M
+      - PHP_POST_MAX_SIZE=50M
+    volumes:
+      - suitecrm_uploads:/var/www/html/upload
+      - suitecrm_cache:/var/www/html/cache
+      - suitecrm_logs:/var/www/html/logs
+      - suitecrm_config_volume:/var/www/html/config-persistence
+      - ./suitecrm.log:/var/www/html/suitecrm.log
+    ports:
+      - "8080:80"
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/index.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - suitecrm_network
+
+  chatbot:
+    build:
+      context: ./suitecrm_chatbot
+      dockerfile: Dockerfile
+    container_name: suitecrm_chatbot
+    environment:
+      - SUITECRM_BASE_URL=http://suitecrm/Api/V8
+      - LOG_LEVEL=INFO
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - chatbot_logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      - suitecrm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - suitecrm_network
+
+volumes:
+  db_data:
+    driver: local
+  suitecrm_uploads:
+    driver: local
+  suitecrm_cache:
+    driver: local
+  suitecrm_logs:
+    driver: local
+  suitecrm_config_volume:
+    driver: local
+  chatbot_logs:
+    driver: local
+
+networks:
+  suitecrm_network:
+    driver: bridge

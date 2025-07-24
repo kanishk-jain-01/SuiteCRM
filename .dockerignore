@@ -1,0 +1,56 @@
+# Version control
+.git
+.gitignore
+
+# Documentation
+README.md
+_docs/
+*.md
+
+# Tests and development files
+tests/
+*.suite.yml
+codeception.dist.yml
+phpcs.xml
+travis.php.ini
+runtests.sh
+
+# Environment and config files
+.env
+.env.example
+config.php.backup
+
+# Logs
+*.log
+server.log
+
+# Cache and temporary files
+cache/
+upload/
+logs/
+
+# Docker files (don't include in the image)
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Build and development directories
+build/
+vendor/composer/
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Other
+robots.txt
+crossdomain.xml
+maintenance.php

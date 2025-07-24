@@ -1,0 +1,13 @@
+[mysqld]
+# SuiteCRM optimizations
+innodb_buffer_pool_size = 256M
+innodb_flush_log_at_trx_commit = 2
+innodb_lock_wait_timeout = 50
+
+# Character set
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+# Connection settings
+max_connections = 200
+max_allowed_packet = 64M
