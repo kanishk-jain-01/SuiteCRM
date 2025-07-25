@@ -77,7 +77,6 @@ terraform/
 │   ├── ecr/                   # Container repositories
 │   └── monitoring/            # CloudWatch and alerting
 └── environments/              # Environment-specific configs
-    ├── dev/                   # Development environment
     ├── staging/               # Staging environment
     └── prod/                  # Production environment
 ```
@@ -93,7 +92,7 @@ terraform/
 
 ### 1. Clone and Navigate
 ```bash
-cd terraform/environments/dev
+cd terraform/environments/staging
 ```
 
 ### 2. Initialize Terraform
@@ -107,7 +106,7 @@ Edit `terraform.tfvars` with your specific configuration:
 aws_region = "us-east-1"
 default_tags = {
   Project     = "SuiteCRM"
-  Environment = "dev"
+  Environment = "staging"
   Owner       = "YourTeam"
 }
 ```
@@ -129,21 +128,15 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 
 # Build and push SuiteCRM image
 cd ../../../
-docker build -f docker/suitecrm/Dockerfile -t <account-id>.dkr.ecr.us-east-1.amazonaws.com/suitecrm-dev-suitecrm:latest .
-docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/suitecrm-dev-suitecrm:latest
+docker build -f docker/suitecrm/Dockerfile -t <account-id>.dkr.ecr.us-east-1.amazonaws.com/suitecrm-staging-suitecrm:latest .
+docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/suitecrm-staging-suitecrm:latest
 
 # Build and push Chatbot image
-docker build -f suitecrm_chatbot/Dockerfile -t <account-id>.dkr.ecr.us-east-1.amazonaws.com/suitecrm-dev-chatbot:latest ./suitecrm_chatbot/
-docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/suitecrm-dev-chatbot:latest
+docker build -f suitecrm_chatbot/Dockerfile -t <account-id>.dkr.ecr.us-east-1.amazonaws.com/suitecrm-staging-chatbot:latest ./suitecrm_chatbot/
+docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/suitecrm-staging-chatbot:latest
 ```
 
 ## Environment Configuration
-
-### Development
-- **VPC CIDR**: 10.0.0.0/16
-- **Database**: db.t3.micro, 20GB storage
-- **ECS Tasks**: 1 SuiteCRM, 1 Chatbot
-- **Backup Retention**: 3 days
 
 ### Staging
 - **VPC CIDR**: 10.1.0.0/16
@@ -172,7 +165,7 @@ Before deploying, create these secrets in AWS Secrets Manager:
 #!/bin/bash
 set -e
 
-ENV=${1:-dev}
+ENV=${1:-staging}
 REGION=${2:-us-east-1}
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
@@ -197,7 +190,7 @@ echo "Images built and pushed successfully"
 #!/bin/bash
 set -e
 
-ENV=${1:-dev}
+ENV=${1:-staging}
 ACTION=${2:-apply}
 
 echo "Deploying to environment: $ENV"
@@ -261,10 +254,10 @@ fi
 
 ## Cost Optimization
 
-### Development
-- Single AZ deployment
-- Smaller instance sizes
-- Shorter backup retention
+### Staging
+- Single AZ deployment (for cost efficiency)
+- Moderate instance sizes
+- Standard backup retention
 
 ### Production
 - Reserved instances for predictable workloads
@@ -294,13 +287,13 @@ fi
 
 ```bash
 # View ECS service status
-aws ecs describe-services --cluster suitecrm-dev-cluster --services suitecrm-dev-suitecrm-service
+aws ecs describe-services --cluster suitecrm-staging-cluster --services suitecrm-staging-suitecrm-service
 
 # Check CloudWatch logs
-aws logs describe-log-groups --log-group-name-prefix "/ecs/suitecrm-dev"
+aws logs describe-log-groups --log-group-name-prefix "/ecs/suitecrm-staging"
 
 # View RDS status
-aws rds describe-db-instances --db-instance-identifier suitecrm-dev-db
+aws rds describe-db-instances --db-instance-identifier suitecrm-staging-db
 ```
 
 ## Contributing

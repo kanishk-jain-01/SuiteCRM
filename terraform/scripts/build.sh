@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-ENV=${1:-dev}
+ENV=${1:-staging}
 REGION=${2:-us-east-1}
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 

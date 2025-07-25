@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e
 
-ENV=${1:-dev}
+ENV=${1:-staging}
 ACTION=${2:-apply}
 
-if [[ "$ENV" != "dev" && "$ENV" != "staging" && "$ENV" != "prod" ]]; then
-    echo "Error: Environment must be one of: dev, staging, prod"
+if [[ "$ENV" != "staging" && "$ENV" != "prod" ]]; then
+    echo "Error: Environment must be one of: staging, prod"
     exit 1
 fi
 
