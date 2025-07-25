@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Type
 from langchain.tools import BaseTool
 from pydantic import BaseModel, Field
 from suitecrm_client import SuiteCRMClient
@@ -75,7 +75,7 @@ class CreateAccountTool(BaseTool):
     Optional: website, phone_office, email1, billing/shipping address fields, industry, 
     account_type, annual_revenue, employees, description, rating, ownership, etc.
     Returns the created account data including the new account ID."""
-    args_schema = CreateAccountInput
+    args_schema: Type[BaseModel] = CreateAccountInput
     
     def _run(self, **kwargs) -> str:
         """Create account synchronously."""
@@ -117,7 +117,7 @@ class SearchAccountsTool(BaseTool):
     You can filter by name, website, industry, account_type.
     You can also specify which fields to return.
     Returns a list of matching accounts."""
-    args_schema = SearchAccountInput
+    args_schema: Type[BaseModel] = SearchAccountInput
     
     def _run(self, **kwargs) -> str:
         """Search accounts synchronously."""
@@ -167,7 +167,7 @@ class GetAccountTool(BaseTool):
     description: str = """Get detailed information about a specific account by its ID.
     Requires the account ID.
     Returns complete account information."""
-    args_schema = GetAccountInput
+    args_schema: Type[BaseModel] = GetAccountInput
     
     def _run(self, account_id: str) -> str:
         """Get account synchronously."""
@@ -230,7 +230,7 @@ class UpdateAccountTool(BaseTool):
     description: str = """Update an existing account in SuiteCRM.
     Requires the account ID and at least one field to update.
     Returns the updated account information."""
-    args_schema = UpdateAccountInput
+    args_schema: Type[BaseModel] = UpdateAccountInput
     
     def _run(self, **kwargs) -> str:
         """Update account synchronously."""
@@ -271,7 +271,7 @@ class DeleteAccountTool(BaseTool):
     Warning: This action cannot be undone!
     Requires the account ID.
     Returns confirmation of deletion."""
-    args_schema = DeleteAccountInput
+    args_schema: Type[BaseModel] = DeleteAccountInput
     
     def _run(self, account_id: str) -> str:
         """Delete account synchronously."""

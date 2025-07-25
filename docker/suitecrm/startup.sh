@@ -5,27 +5,40 @@ set -e
 
 echo "Starting SuiteCRM container..."
 
+PERSIST_CONFIG="/var/www/html/config-persistence/config.php"
+CONFIG_FILE="/var/www/html/config.php"
+
+# Ensure the persistence directory exists
+mkdir -p /var/www/html/config-persistence
+chown www-data:www-data /var/www/html/config-persistence
+
 # Check if config.php exists in persistent storage
-if [ -f "/var/www/html/config-persistence/config.php" ]; then
-    echo "Found existing config.php, copying to application directory"
-    cp /var/www/html/config-persistence/config.php /var/www/html/config.php
-    chown www-data:www-data /var/www/html/config.php
+if [ -f "$PERSIST_CONFIG" ]; then
+    echo "Found existing config.php in persistent storage, creating symlink"
+    ln -sf "$PERSIST_CONFIG" "$CONFIG_FILE"
+    chown -h www-data:www-data "$CONFIG_FILE"
 else
-    echo "No existing config.php found, installer will run on first access"
-    # Ensure the persistence directory exists
-    mkdir -p /var/www/html/config-persistence
-    chown www-data:www-data /var/www/html/config-persistence
+    echo "No existing config.php found, will monitor for creation during installation"
+    # Background process to monitor for config.php creation and persist it
+    (
+        while [ ! -f "$CONFIG_FILE" ]; do
+            sleep 2
+        done
+        echo "Config file created, saving to persistent storage..."
+        cp "$CONFIG_FILE" "$PERSIST_CONFIG"
+        chown www-data:www-data "$PERSIST_CONFIG"
+        # Replace the original with a symlink to the persistent version
+        rm "$CONFIG_FILE"
+        ln -sf "$PERSIST_CONFIG" "$CONFIG_FILE"
+        chown -h www-data:www-data "$CONFIG_FILE"
+        echo "Config.php successfully saved to persistent storage and symlinked"
+    ) &
 fi
 
-# Create a hook to save config.php when it's created
-cat > /var/www/html/save-config.php << 'EOF'
-<?php
-// Hook to save config.php to persistent storage after installation
-if (file_exists('/var/www/html/config.php') && !file_exists('/var/www/html/config-persistence/config.php')) {
-    copy('/var/www/html/config.php', '/var/www/html/config-persistence/config.php');
-    echo "Config saved to persistent storage\n";
-}
-EOF
+# Remove the old save-config.php hook as we're handling persistence directly
+if [ -f "/var/www/html/save-config.php" ]; then
+    rm -f /var/www/html/save-config.php
+fi
 
 # Set proper permissions
 chown -R www-data:www-data /var/www/html

@@ -9,7 +9,7 @@
     
     // Configuration - Customize these settings
     const CHAT_CONFIG = {
-        apiUrl: 'http://localhost:8001', // Your FastAPI server URL
+        apiUrl: 'http://localhost:8000', // Your FastAPI server URL
         position: 'bottom-right', // Options: bottom-right, bottom-left, top-right, top-left
         theme: 'suitep', // Theme: suitep (matches SuiteCRM theme)
         autoOpen: false, // Auto-open chat on page load
