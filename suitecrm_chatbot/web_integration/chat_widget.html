@@ -225,7 +225,7 @@
 
     <script>
         class SuiteCRMChatWidget {
-            constructor(apiUrl = 'http://localhost:8000') {
+            constructor(apiUrl = window.location.origin + '/api/chatbot') {
                 this.apiUrl = apiUrl;
                 this.isOpen = false;
                 this.init();
@@ -359,7 +359,7 @@
         // Initialize the chat widget when the page loads
         document.addEventListener('DOMContentLoaded', function() {
             // You can customize the API URL here
-            const chatWidget = new SuiteCRMChatWidget('http://localhost:8000');
+            const chatWidget = new SuiteCRMChatWidget();
         });
     </script>
 </body>

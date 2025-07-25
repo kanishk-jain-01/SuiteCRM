@@ -1,4 +1,21 @@
+# Enhanced local development matching AWS setup
 services:
+  # Load balancer simulation (nginx)
+  loadbalancer:
+    image: nginx:alpine
+    container_name: suitecrm_lb
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - suitecrm
+      - chatbot
+    networks:
+      - suitecrm_network
+
   database:
     image: mysql:8.0
     container_name: suitecrm_database
@@ -22,6 +39,15 @@ services:
     networks:
       - suitecrm_network
 
+  # Redis for caching (like AWS ElastiCache)
+  redis:
+    image: redis:7-alpine
+    container_name: suitecrm_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - suitecrm_network
+
   suitecrm:
     build:
       context: .
@@ -33,39 +59,26 @@ services:
       - DB_USER=${DB_USER:-suitecrm}
       - DB_PASSWORD=${DB_PASSWORD:-dev_suite_123}
       - CHATBOT_API_URL=http://chatbot:8000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - PHP_MEMORY_LIMIT=512M
       - PHP_UPLOAD_MAX_FILESIZE=50M
       - PHP_POST_MAX_SIZE=50M
+      - ENVIRONMENT=local
     volumes:
       - suitecrm_uploads:/var/www/html/upload
       - suitecrm_cache:/var/www/html/cache
       - suitecrm_logs:/var/www/html/logs
       - suitecrm_config_volume:/var/www/html/config-persistence
       - ./suitecrm.log:/var/www/html/suitecrm.log
+    # No exposed ports - accessed through load balancer
     depends_on:
       database:
         condition: service_healthy
+      redis:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/index.php"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - suitecrm_network
-
-  nginx:
-    image: nginx:alpine
-    container_name: suitecrm_nginx
-    ports:
-      - "8080:80"
-      - "8443:443"
-    volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - suitecrm
-      - chatbot
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health/suitecrm"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -79,7 +92,7 @@ services:
     container_name: suitecrm_chatbot
     environment:
       - SUITECRM_BASE_URL=http://suitecrm/Api/V8
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -87,13 +100,30 @@ services:
       - SUITECRM_CLIENT_SECRET=${SUITECRM_CLIENT_SECRET}
       - SUITECRM_USERNAME=${SUITECRM_USERNAME}
       - SUITECRM_PASSWORD=${SUITECRM_PASSWORD}
+      - ENVIRONMENT=local
     volumes:
       - chatbot_logs:/app/logs
+    # No exposed ports - accessed through load balancer
+    depends_on:
+      - suitecrm
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - suitecrm_network
+
+  # Log aggregation (like AWS CloudWatch)
+  fluentd:
+    image: fluent/fluentd:v1.16-debian-1
+    container_name: suitecrm_logs
+    volumes:
+      - ./docker/fluentd/fluent.conf:/fluentd/etc/fluent.conf
+      - suitecrm_logs:/var/log/suitecrm
+      - chatbot_logs:/var/log/chatbot
+    ports:
+      - "24224:24224"
     networks:
       - suitecrm_network
 

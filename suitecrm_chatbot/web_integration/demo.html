@@ -294,7 +294,7 @@
     <script>
         // Configuration for the chat widget
         window.SUITECRM_CHAT_CONFIG = {
-            apiUrl: 'http://localhost:8000', // Your FastAPI server URL
+            apiUrl: window.location.origin + '/api/chatbot', // Your FastAPI server URL via nginx proxy
             position: 'bottom-right',
             autoOpen: false,
             welcomeMessage: true,
