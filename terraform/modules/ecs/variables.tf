@@ -109,9 +109,45 @@ variable "ecr_repository_url" {
 }
 
 variable "chatbot_ecr_repository_url" {
-  description = "URL of the ECR repository for Chatbot"
+  description = "URL of the chatbot ECR repository"
   type        = string
-  default     = "suitecrm-chatbot:latest"
+  default     = ""
+}
+
+variable "site_url" {
+  description = "Site URL for SuiteCRM (will use ALB DNS if empty)"
+  type        = string
+  default     = ""
+}
+
+variable "system_name" {
+  description = "System name for SuiteCRM"
+  type        = string
+  default     = "SuiteCRM"
+}
+
+variable "admin_username" {
+  description = "Admin username for SuiteCRM"
+  type        = string
+  default     = "admin"
+}
+
+variable "admin_password" {
+  description = "Admin password for SuiteCRM"
+  type        = string
+  sensitive   = true
+}
+
+variable "db_charset" {
+  description = "Database charset"
+  type        = string
+  default     = "utf8mb4"
+}
+
+variable "db_collation" {
+  description = "Database collation"
+  type        = string
+  default     = "utf8mb4_general_ci"
 }
 
 variable "domain_name" {

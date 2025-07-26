@@ -136,3 +136,47 @@ variable "suitecrm_password" {
   default     = ""
   sensitive   = true
 }
+
+# SuiteCRM Installation Configuration
+variable "site_url" {
+  description = "Site URL for SuiteCRM (will use ALB DNS if empty)"
+  type        = string
+  default     = ""
+}
+
+variable "system_name" {
+  description = "System name for SuiteCRM"
+  type        = string
+  default     = "SuiteCRM"
+}
+
+variable "admin_username" {
+  description = "Admin username for SuiteCRM"
+  type        = string
+  default     = "admin"
+}
+
+variable "admin_password" {
+  description = "Admin password for SuiteCRM"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "admin_email" {
+  description = "Admin email for SuiteCRM"
+  type        = string
+  default     = ""
+}
+
+variable "db_collation" {
+  description = "Database collation"
+  type        = string
+  default     = "utf8mb4_general_ci"
+}
+
+variable "db_charset" {
+  description = "Database charset"
+  type        = string
+  default     = "utf8mb4"
+}

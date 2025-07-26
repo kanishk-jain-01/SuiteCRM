@@ -56,6 +56,14 @@ module "suitecrm" {
   suitecrm_username = var.suitecrm_username
   suitecrm_password = var.suitecrm_password
   
+  # SuiteCRM Installation Configuration
+  site_url       = var.site_url
+  system_name    = var.system_name
+  admin_username = var.admin_username
+  admin_password = var.admin_password
+  db_charset     = var.db_charset
+  db_collation   = var.db_collation
+  
   # SSL Configuration (if you have a certificate)
   # domain_name     = "staging.yourdomain.com"
   # certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"

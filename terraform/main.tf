@@ -88,6 +88,14 @@ module "ecs" {
   domain_name     = var.domain_name
   certificate_arn = var.certificate_arn
   
+  # SuiteCRM Installation Configuration
+  site_url       = var.site_url
+  system_name    = var.system_name
+  admin_username = var.admin_username
+  admin_password = var.admin_password
+  db_charset     = var.db_charset
+  db_collation   = var.db_collation
+  
   # Secrets
   openai_api_key = var.openai_api_key
   suitecrm_client_id = var.suitecrm_client_id

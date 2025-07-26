@@ -88,6 +88,38 @@ terraform/
 3. **Docker** for building container images
 4. **Domain name** and **SSL certificate** (for production)
 
+## Silent Installation Configuration
+
+SuiteCRM is configured to run in silent installation mode on the first deployment. This means the application will automatically:
+
+1. Create the database schema
+2. Configure the admin user
+3. Set up the system without requiring manual installation through the web interface
+
+### Required Environment Variables
+
+The following environment variables must be set for silent installation:
+
+- `admin_username` - Admin username for SuiteCRM (default: "admin")
+- `admin_password` - Admin password for SuiteCRM (required, no default)
+- `site_url` - Site URL for SuiteCRM (optional, will use ALB DNS if not set)
+- `system_name` - System name for SuiteCRM (default: "SuiteCRM")
+- `db_charset` - Database character set (default: "utf8mb4")
+- `db_collation` - Database collation (default: "utf8mb4_general_ci")
+
+### First-Time Deployment
+
+On the first deployment, the container will:
+
+1. Validate all required environment variables
+2. Wait for the database to be available
+3. Create the database if it doesn't exist
+4. Run the silent installation process
+5. Save the configuration to persistent storage
+6. Start the Apache web server
+
+After successful installation, users can access SuiteCRM at the configured URL and log in with the admin credentials.
+
 ## Quick Start
 
 ### 1. Clone and Navigate

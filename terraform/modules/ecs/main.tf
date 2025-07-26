@@ -277,7 +277,7 @@ resource "aws_ecs_task_definition" "suitecrm" {
       environment = [
         {
           name  = "DB_HOST"
-          value = var.db_host
+          value = split(":", var.db_host)[0]
         },
         {
           name  = "DB_NAME"
@@ -286,6 +286,30 @@ resource "aws_ecs_task_definition" "suitecrm" {
         {
           name  = "DB_USER"
           value = var.db_username
+        },
+        {
+          name  = "DB_CHARSET"
+          value = var.db_charset
+        },
+        {
+          name  = "DB_COLLATION"
+          value = var.db_collation
+        },
+        {
+          name  = "SITE_URL"
+          value = var.site_url != "" ? var.site_url : "https://${var.domain_name != "" ? var.domain_name : aws_lb.main.dns_name}"
+        },
+        {
+          name  = "SYSTEM_NAME"
+          value = var.system_name
+        },
+        {
+          name  = "ADMIN_USERNAME"
+          value = var.admin_username
+        },
+        {
+          name  = "ADMIN_PASSWORD"
+          value = var.admin_password
         },
         {
           name  = "CHATBOT_API_URL"
