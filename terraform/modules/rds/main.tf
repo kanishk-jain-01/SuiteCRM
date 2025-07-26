@@ -88,9 +88,8 @@ resource "aws_db_instance" "main" {
   monitoring_interval = 60
   monitoring_role_arn = aws_iam_role.rds_monitoring.arn
   
-  # Performance Insights
-  performance_insights_enabled = true
-  performance_insights_retention_period = 7
+  # Performance Insights (disabled for t3.small instance class)
+  performance_insights_enabled = false
   
   # Parameter Group
   parameter_group_name = aws_db_parameter_group.main.name

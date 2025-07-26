@@ -39,7 +39,7 @@ resource "aws_lb_target_group" "suitecrm" {
     enabled             = true
     healthy_threshold   = 2
     interval            = 30
-    matcher             = "200"
+    matcher             = "200,302"
     path                = "/index.php"
     port                = "traffic-port"
     protocol            = "HTTP"
@@ -484,6 +484,7 @@ resource "aws_ecs_service" "suitecrm" {
   task_definition = aws_ecs_task_definition.suitecrm.arn
   desired_count   = var.suitecrm_desired_count
   launch_type     = "FARGATE"
+  enable_execute_command = true
   
   network_configuration {
     subnets          = var.private_subnet_ids

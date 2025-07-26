@@ -89,3 +89,50 @@ variable "default_tags" {
     ManagedBy   = "Terraform"
   }
 }
+
+variable "ecr_repository_url" {
+  description = "URL of the ECR repository for SuiteCRM"
+  type        = string
+  default     = ""
+}
+
+variable "chatbot_ecr_repository_url" {
+  description = "URL of the ECR repository for Chatbot"
+  type        = string
+  default     = ""
+}
+
+variable "openai_api_key" {
+  description = "OpenAI API key for chatbot"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "suitecrm_client_id" {
+  description = "SuiteCRM OAuth client ID"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "suitecrm_client_secret" {
+  description = "SuiteCRM OAuth client secret"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "suitecrm_username" {
+  description = "SuiteCRM username for API access"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "suitecrm_password" {
+  description = "SuiteCRM password for API access"
+  type        = string
+  default     = ""
+  sensitive   = true
+}

@@ -8,14 +8,12 @@ terraform {
     }
   }
   
-  # Uncomment and configure for remote state
-  # backend "s3" {
-  #   bucket         = "your-terraform-state-bucket"
-  #   key            = "suitecrm/staging/terraform.tfstate"
-  #   region         = "us-east-1"
-  #   dynamodb_table = "terraform-state-lock"
-  #   encrypt        = true
-  # }
+  backend "s3" {
+    bucket  = "suitecrm-terraform-state-staging"
+    key     = "suitecrm/staging/terraform.tfstate"
+    region  = "us-east-1"
+    encrypt = true
+  }
 }
 
 provider "aws" {
@@ -46,6 +44,17 @@ module "suitecrm" {
   # ECS Configuration
   suitecrm_desired_count = 2
   chatbot_desired_count  = 1
+  
+  # ECR Repository URLs
+  ecr_repository_url = "787187109626.dkr.ecr.us-east-1.amazonaws.com/suitecrm-staging-suitecrm"
+  chatbot_ecr_repository_url = "787187109626.dkr.ecr.us-east-1.amazonaws.com/suitecrm-staging-chatbot"
+  
+  # Secrets (will be set via environment variables)
+  openai_api_key = var.openai_api_key
+  suitecrm_client_id = var.suitecrm_client_id
+  suitecrm_client_secret = var.suitecrm_client_secret
+  suitecrm_username = var.suitecrm_username
+  suitecrm_password = var.suitecrm_password
   
   # SSL Configuration (if you have a certificate)
   # domain_name     = "staging.yourdomain.com"

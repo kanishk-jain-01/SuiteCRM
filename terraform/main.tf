@@ -76,9 +76,9 @@ module "ecs" {
   # Database secret
   db_secret_arn = module.rds.db_secret_arn
   
-  # ECR repositories
-  ecr_repository_url = module.ecr.suitecrm_repository_url
-  chatbot_ecr_repository_url = module.ecr.chatbot_repository_url
+  # ECR repositories - use provided URLs or fallback to module output
+  ecr_repository_url = var.ecr_repository_url != "" ? var.ecr_repository_url : module.ecr.suitecrm_repository_url
+  chatbot_ecr_repository_url = var.chatbot_ecr_repository_url != "" ? var.chatbot_ecr_repository_url : module.ecr.chatbot_repository_url
   
   # Task counts
   suitecrm_desired_count = var.suitecrm_desired_count
@@ -87,6 +87,13 @@ module "ecs" {
   # SSL
   domain_name     = var.domain_name
   certificate_arn = var.certificate_arn
+  
+  # Secrets
+  openai_api_key = var.openai_api_key
+  suitecrm_client_id = var.suitecrm_client_id
+  suitecrm_client_secret = var.suitecrm_client_secret
+  suitecrm_username = var.suitecrm_username
+  suitecrm_password = var.suitecrm_password
   
   tags = local.common_tags
 }
