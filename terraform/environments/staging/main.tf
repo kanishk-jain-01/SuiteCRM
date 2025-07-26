@@ -42,7 +42,7 @@ module "suitecrm" {
   backup_retention_period = 7
   
   # ECS Configuration
-  suitecrm_desired_count = 2
+  suitecrm_desired_count = 1
   chatbot_desired_count  = 1
   
   # ECR Repository URLs
