@@ -30,17 +30,36 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
+    - name: Wait for MySQL to be fully ready
+      run: |
+        echo "Waiting for MySQL service to be fully ready..."
+        for i in {1..30}; do
+          if mysqladmin ping -h 127.0.0.1 -u suitecrm -ptest_suite_123 --silent; then
+            echo "MySQL is ready!"
+            break
+          fi
+          echo "Waiting for MySQL... ($i/30)"
+          sleep 2
+        done
+        
+        echo "Testing MySQL connection with root user:"
+        mysql -h 127.0.0.1 -u root -prootpass123 -e "SHOW DATABASES;" || echo "Root connection failed"
+        
+        echo "Testing MySQL connection with suitecrm user:"
+        mysql -h 127.0.0.1 -u suitecrm -ptest_suite_123 -e "SHOW DATABASES;" || echo "SuiteCRM user connection failed"
+
     - name: Build and test
       id: test_result
       run: |
         # Build the image
         docker build -f docker/suitecrm/Dockerfile -t suitecrm:staging-test .
         
-        # Start SuiteCRM container with silent install environment variables
+        # Start SuiteCRM container with silent install environment variables  
+        # Use --network host to access GitHub Actions MySQL service on localhost
         docker run -d \
           --name suitecrm_staging_test \
-          --add-host host.docker.internal:host-gateway \
-          -e DB_HOST=host.docker.internal \
+          --network host \
+          -e DB_HOST=127.0.0.1 \
           -e DB_NAME=suitecrm \
           -e DB_USER=suitecrm \
           -e DB_PASSWORD=test_suite_123 \
@@ -70,7 +89,13 @@ jobs:
         docker exec suitecrm_staging_test env | grep -E "(DB_|SITE_|ADMIN_|SYSTEM_)" || echo "Cannot check environment"
         
         echo "Database connectivity test:"
-        docker exec suitecrm_staging_test mysqladmin ping -h host.docker.internal -u suitecrm -ptest_suite_123 2>&1 || echo "Database connection failed"
+        docker exec suitecrm_staging_test mysqladmin ping -h 127.0.0.1 -u suitecrm -ptest_suite_123 2>&1 || echo "Database connection failed"
+        
+        echo "Additional debugging - checking MySQL from host:"
+        mysqladmin ping -h 127.0.0.1 -u suitecrm -ptest_suite_123 2>&1 || echo "Host MySQL connection failed"
+        
+        echo "MySQL process check on host:"
+        sudo netstat -tulpn | grep :3306 || echo "No MySQL on port 3306"
         
         # Wait for SuiteCRM installation to complete with enhanced debugging
         echo "=== Waiting for SuiteCRM silent installation ==="
