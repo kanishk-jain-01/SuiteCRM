@@ -56,19 +56,72 @@ jobs:
           --network host \
           suitecrm:staging-test
         
-        # Wait for SuiteCRM installation to complete
-        echo "Waiting for SuiteCRM silent installation..."
+        # Debug container startup
+        echo "=== Debugging container startup ==="
+        echo "Container status:"
+        docker ps | grep suitecrm_staging_test || echo "Container not found"
+        
+        echo "Container logs (first 50 lines):"
+        docker logs suitecrm_staging_test 2>&1 | head -50
+        
+        echo "Container processes:"
+        docker exec suitecrm_staging_test ps aux || echo "Cannot exec into container"
+        
+        echo "Container environment:"
+        docker exec suitecrm_staging_test env | grep -E "(DB_|SITE_|ADMIN_|SYSTEM_)" || echo "Cannot check environment"
+        
+        echo "Database connectivity test:"
+        docker exec suitecrm_staging_test mysqladmin ping -h 127.0.0.1 -u suitecrm -ptest_suite_123 2>&1 || echo "Database connection failed"
+        
+        # Wait for SuiteCRM installation to complete with enhanced debugging
+        echo "=== Waiting for SuiteCRM silent installation ==="
         for i in {1..120}; do
+          echo "--- Check $i/120 ---"
+          
+          # Check if config.php exists
           if docker exec suitecrm_staging_test test -f /var/www/html/config.php; then
-            echo "SuiteCRM installation complete"
-            if docker exec suitecrm_staging_test curl -f http://localhost/index.php > /dev/null 2>&1; then
-              echo "SuiteCRM is responsive"
+            echo "✅ config.php found!"
+            
+            # Check web response
+            HTTP_STATUS=$(docker exec suitecrm_staging_test curl -s -o /dev/null -w "%{http_code}" http://localhost/index.php 2>/dev/null || echo "000")
+            echo "HTTP Status: $HTTP_STATUS"
+            
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ SuiteCRM is responsive!"
               break
+            else
+              echo "❌ SuiteCRM not responsive (HTTP: $HTTP_STATUS)"
             fi
+          else
+            echo "❌ config.php not found"
           fi
+          
+          # Show recent logs every 10 iterations
+          if [ $((i % 10)) -eq 0 ]; then
+            echo "=== Recent container logs ==="
+            docker logs suitecrm_staging_test 2>&1 | tail -20
+            
+            echo "=== Files in web directory ==="
+            docker exec suitecrm_staging_test ls -la /var/www/html/ | grep -E "(config|install)" || echo "No config/install files found"
+            
+            echo "=== Apache status ==="
+            docker exec suitecrm_staging_test ps aux | grep apache || echo "Apache not running"
+          fi
+          
           echo "Waiting for installation... ($i/120)"
           sleep 5
         done
+        
+        # Final debug info if installation failed
+        echo "=== Final debug information ==="
+        echo "Full container logs:"
+        docker logs suitecrm_staging_test 2>&1
+        
+        echo "File system status:"
+        docker exec suitecrm_staging_test df -h || echo "Cannot check disk space"
+        
+        echo "All files in web directory:"
+        docker exec suitecrm_staging_test find /var/www/html -name "*.php" -o -name "config*" -o -name "install*" | head -20 || echo "Cannot list files"
         
         # Run critical tests
         set +e  # Don't exit on test failure
