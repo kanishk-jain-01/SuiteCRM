@@ -15,6 +15,12 @@ variable "environment" {
   type        = string
 }
 
+variable "image_tag" {
+  description = "Docker image tag to deploy"
+  type        = string
+  default     = "latest"
+}
+
 variable "vpc_cidr" {
   description = "CIDR block for VPC"
   type        = string

@@ -80,6 +80,9 @@ module "ecs" {
   ecr_repository_url = var.ecr_repository_url != "" ? var.ecr_repository_url : module.ecr.suitecrm_repository_url
   chatbot_ecr_repository_url = var.chatbot_ecr_repository_url != "" ? var.chatbot_ecr_repository_url : module.ecr.chatbot_repository_url
   
+  # Image tag for deployments
+  image_tag = var.image_tag
+  
   # Task counts
   suitecrm_desired_count = var.suitecrm_desired_count
   chatbot_desired_count  = var.chatbot_desired_count

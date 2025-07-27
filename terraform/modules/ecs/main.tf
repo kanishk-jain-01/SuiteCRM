@@ -268,7 +268,7 @@ resource "aws_ecs_task_definition" "suitecrm" {
   container_definitions = jsonencode([
     {
       name  = "suitecrm"
-      image = "${var.ecr_repository_url}:latest"
+      image = "${var.ecr_repository_url}:${var.image_tag}"
       
       portMappings = [
         {
@@ -414,7 +414,7 @@ resource "aws_ecs_task_definition" "chatbot" {
   container_definitions = jsonencode([
     {
       name  = "chatbot"
-      image = "${var.chatbot_ecr_repository_url}:latest"
+      image = "${var.chatbot_ecr_repository_url}:${var.image_tag}"
       
       portMappings = [
         {

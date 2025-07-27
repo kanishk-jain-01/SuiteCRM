@@ -114,6 +114,12 @@ variable "chatbot_ecr_repository_url" {
   default     = ""
 }
 
+variable "image_tag" {
+  description = "Docker image tag to deploy"
+  type        = string
+  default     = "latest"
+}
+
 variable "site_url" {
   description = "Site URL for SuiteCRM (will use ALB DNS if empty)"
   type        = string
