@@ -91,7 +91,6 @@ jobs:
       run: |
         cd terraform/environments/staging
         terraform plan \
-          -var="image_tag=${{ github.sha }}" \
           -var="openai_api_key=${{ secrets.OPENAI_API_KEY }}" \
           -var="suitecrm_client_id=${{ secrets.SUITECRM_CLIENT_ID }}" \
           -var="suitecrm_client_secret=${{ secrets.SUITECRM_CLIENT_SECRET }}" \
@@ -99,7 +98,6 @@ jobs:
           -var="suitecrm_password=${{ secrets.SUITECRM_PASSWORD }}" \
           -var="admin_username=${{ secrets.SUITECRM_USERNAME }}" \
           -var="admin_password=${{ secrets.ADMIN_PASSWORD }}" \
-          -var="admin_email=${{ secrets.ADMIN_EMAIL }}" \
           -var="system_name=SuiteCRM" \
           -var="site_url=" \
           -var="db_collation=utf8mb4_general_ci" \
