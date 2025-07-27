@@ -34,26 +34,26 @@ jobs:
       id: test_result
       run: |
         # Build the container
-        docker-compose build suitecrm
+        docker compose build suitecrm
         
         # Start services
-        docker-compose up -d database
+        docker compose up -d database
         
         # Wait for database
         echo "Waiting for MySQL..."
         for i in {1..30}; do
-          if docker-compose exec -T database mysqladmin ping -h localhost --silent; then
+          if docker compose exec -T database mysqladmin ping -h localhost --silent; then
             break
           fi
           sleep 2
         done
         
-        docker-compose up -d suitecrm
+        docker compose up -d suitecrm
         
         # Wait for SuiteCRM
         echo "Waiting for SuiteCRM..."
         for i in {1..60}; do
-          if docker-compose exec -T suitecrm curl -f http://localhost/index.php > /dev/null 2>&1; then
+          if docker compose exec -T suitecrm curl -f http://localhost/index.php > /dev/null 2>&1; then
             break
           fi
           sleep 5
@@ -61,10 +61,10 @@ jobs:
         
         # Run critical tests
         set +e  # Don't exit on test failure
-        docker-compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/ConfigTest.php"
+        docker compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/ConfigTest.php"
         config_status=$?
         
-        docker-compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/data/"
+        docker compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/data/"
         data_status=$?
         
         if [ $config_status -eq 0 ] && [ $data_status -eq 0 ]; then
@@ -74,7 +74,7 @@ jobs:
         fi
         
         # Cleanup
-        docker-compose down -v
+        docker compose down -v
 
   deploy:
     needs: test

@@ -59,14 +59,14 @@ env:
 Test the same commands locally:
 ```bash
 # Start services
-docker-compose up -d
+docker compose up -d
 
 # Run tests
-docker-compose exec suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/ConfigTest.php"
-docker-compose exec suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/data/"
-docker-compose exec suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/includes/"
+docker compose exec suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/ConfigTest.php"
+docker compose exec suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/data/"
+docker compose exec suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/includes/"
 
 # Code quality
-docker-compose exec suitecrm vendor/bin/phpcs --standard=PSR2 --extensions=php --ignore=vendor/,cache/,upload/ .
-docker-compose exec suitecrm vendor/bin/phpstan analyse --memory-limit=2G
+docker compose exec suitecrm vendor/bin/phpcs --standard=PSR2 --extensions=php --ignore=vendor/,cache/,upload/ .
+docker compose exec suitecrm vendor/bin/phpstan analyse --memory-limit=2G
 ```
