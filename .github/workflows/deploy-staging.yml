@@ -23,6 +23,22 @@ jobs:
     outputs:
       test_status: ${{ steps.test_result.outputs.status }}
     
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass123
+          MYSQL_DATABASE: suitecrm
+          MYSQL_USER: suitecrm
+          MYSQL_PASSWORD: test_suite_123
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
