@@ -52,30 +52,26 @@ jobs:
         echo "Building SuiteCRM image..."
         docker build --platform=linux/amd64 -f docker/suitecrm/Dockerfile -t ${{ env.ECR_REPOSITORY_SUITECRM }}:latest .
         
-        # Tag SuiteCRM image for ECR
+        # Tag SuiteCRM image for ECR (only latest)
         docker tag ${{ env.ECR_REPOSITORY_SUITECRM }}:latest $ECR_REGISTRY/${{ env.ECR_REPOSITORY_SUITECRM }}:latest
-        docker tag ${{ env.ECR_REPOSITORY_SUITECRM }}:latest $ECR_REGISTRY/${{ env.ECR_REPOSITORY_SUITECRM }}:$IMAGE_TAG
         
         # Build Chatbot image with correct platform
         echo "Building Chatbot image..."
         docker build --platform=linux/amd64 -f suitecrm_chatbot/Dockerfile -t ${{ env.ECR_REPOSITORY_CHATBOT }}:latest ./suitecrm_chatbot
         
-        # Tag Chatbot image for ECR
+        # Tag Chatbot image for ECR (only latest)
         docker tag ${{ env.ECR_REPOSITORY_CHATBOT }}:latest $ECR_REGISTRY/${{ env.ECR_REPOSITORY_CHATBOT }}:latest
-        docker tag ${{ env.ECR_REPOSITORY_CHATBOT }}:latest $ECR_REGISTRY/${{ env.ECR_REPOSITORY_CHATBOT }}:$IMAGE_TAG
         
-        # Push SuiteCRM images
-        echo "Pushing SuiteCRM images..."
+        # Push SuiteCRM image
+        echo "Pushing SuiteCRM image..."
         docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_SUITECRM }}:latest
-        docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_SUITECRM }}:$IMAGE_TAG
         
-        # Push Chatbot images
-        echo "Pushing Chatbot images..."
+        # Push Chatbot image
+        echo "Pushing Chatbot image..."
         docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_CHATBOT }}:latest
-        docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_CHATBOT }}:$IMAGE_TAG
         
-        echo "suitecrm_image=$ECR_REGISTRY/${{ env.ECR_REPOSITORY_SUITECRM }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
-        echo "chatbot_image=$ECR_REGISTRY/${{ env.ECR_REPOSITORY_CHATBOT }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "suitecrm_image=$ECR_REGISTRY/${{ env.ECR_REPOSITORY_SUITECRM }}:latest" >> $GITHUB_OUTPUT
+        echo "chatbot_image=$ECR_REGISTRY/${{ env.ECR_REPOSITORY_CHATBOT }}:latest" >> $GITHUB_OUTPUT
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
