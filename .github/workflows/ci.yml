@@ -55,9 +55,10 @@ jobs:
 
     - name: Start SuiteCRM container
       run: |
-        # Update SuiteCRM container to connect to GitHub Actions MySQL service
-        docker compose run -d \
+        # Start SuiteCRM container to connect to GitHub Actions MySQL service
+        docker run -d \
           --name suitecrm_app_test \
+          --add-host host.docker.internal:host-gateway \
           -e DB_HOST=host.docker.internal \
           -e DB_NAME=${{ env.DB_NAME }} \
           -e DB_USER=${{ env.DB_USER }} \
@@ -67,8 +68,10 @@ jobs:
           -e SUITECRM_CLIENT_SECRET="" \
           -e SUITECRM_USERNAME="" \
           -e SUITECRM_PASSWORD="" \
-          --add-host host.docker.internal:host-gateway \
-          suitecrm
+          -e PHP_MEMORY_LIMIT=512M \
+          -e PHP_UPLOAD_MAX_FILESIZE=50M \
+          -e PHP_POST_MAX_SIZE=50M \
+          suitecrm_suitecrm:latest
 
     - name: Wait for SuiteCRM to be ready
       run: |
