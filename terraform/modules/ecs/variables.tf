@@ -202,3 +202,40 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+# Health Check Configuration Variables
+variable "health_check_interval" {
+  description = "Target group health check interval in seconds"
+  type        = number
+  default     = 60
+}
+
+variable "health_check_timeout" {
+  description = "Target group health check timeout in seconds"
+  type        = number
+  default     = 15
+}
+
+variable "health_check_healthy_threshold" {
+  description = "Number of consecutive successful health checks before marking healthy"
+  type        = number
+  default     = 2
+}
+
+variable "health_check_unhealthy_threshold" {
+  description = "Number of consecutive failed health checks before marking unhealthy"
+  type        = number
+  default     = 10
+}
+
+variable "health_check_grace_period" {
+  description = "ECS service health check grace period in seconds"
+  type        = number
+  default     = 600
+}
+
+variable "deregistration_delay" {
+  description = "Target group deregistration delay in seconds"
+  type        = number
+  default     = 30
+}

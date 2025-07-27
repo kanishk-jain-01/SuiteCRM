@@ -35,16 +35,19 @@ resource "aws_lb_target_group" "suitecrm" {
   vpc_id   = var.vpc_id
   target_type = "ip"
   
+  # Add deregistration delay for smoother deployments
+  deregistration_delay = var.deregistration_delay
+  
   health_check {
     enabled             = true
-    healthy_threshold   = 2
-    interval            = 30
-    matcher             = "200,302"
-    path                = "/index.php"
+    healthy_threshold   = var.health_check_healthy_threshold
+    interval            = var.health_check_interval
+    matcher             = "200"
+    path                = "/health.php"        # Use dedicated health check endpoint
     port                = "traffic-port"
     protocol            = "HTTP"
-    timeout             = 5
-    unhealthy_threshold = 2
+    timeout             = var.health_check_timeout
+    unhealthy_threshold = var.health_check_unhealthy_threshold
   }
   
   tags = merge(var.tags, {
@@ -361,11 +364,11 @@ resource "aws_ecs_task_definition" "suitecrm" {
       }
       
       healthCheck = {
-        command = ["CMD-SHELL", "curl -f http://localhost/index.php || exit 1"]
+        command = ["CMD-SHELL", "curl -f http://localhost/health.php || exit 1"]
         interval = 30
-        timeout = 5
+        timeout = 10
         retries = 3
-        startPeriod = 60
+        startPeriod = 180
       }
       
       essential = true
@@ -509,6 +512,9 @@ resource "aws_ecs_service" "suitecrm" {
   desired_count   = var.suitecrm_desired_count
   launch_type     = "FARGATE"
   enable_execute_command = true
+  
+  # Health check grace period to allow SuiteCRM to fully initialize
+  health_check_grace_period_seconds = var.health_check_grace_period
   
   network_configuration {
     subnets          = var.private_subnet_ids
