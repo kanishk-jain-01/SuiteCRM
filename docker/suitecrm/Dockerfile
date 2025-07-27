@@ -53,9 +53,9 @@ RUN mkdir -p /var/www/html/cache \
     && chmod -R 775 /var/www/html/upload \
     && chmod -R 775 /var/www/html/logs
 
-# Install Composer dependencies
+# Install Composer dependencies (include dev dependencies for testing)
 RUN if [ -f composer.json ]; then \
-    composer install --no-dev --optimize-autoloader --no-scripts; \
+    composer install --optimize-autoloader --no-scripts; \
     fi
 
 # Configure PHP

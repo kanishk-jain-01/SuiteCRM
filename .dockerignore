@@ -8,7 +8,7 @@ _docs/
 *.md
 
 # Tests and development files
-tests/
+# tests/
 *.suite.yml
 codeception.dist.yml
 phpcs.xml
