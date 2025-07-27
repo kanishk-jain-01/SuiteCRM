@@ -1,0 +1,162 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ staging ]
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Force deployment even if tests fail'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  AWS_REGION: us-east-1  # Update to your AWS region
+  ECR_REPOSITORY: suitecrm-app
+  ECS_SERVICE: suitecrm-service
+  ECS_CLUSTER: suitecrm-cluster
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      test_status: ${{ steps.test_result.outputs.status }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and test
+      id: test_result
+      run: |
+        # Build the container
+        docker-compose build suitecrm
+        
+        # Start services
+        docker-compose up -d database
+        
+        # Wait for database
+        echo "Waiting for MySQL..."
+        for i in {1..30}; do
+          if docker-compose exec -T database mysqladmin ping -h localhost --silent; then
+            break
+          fi
+          sleep 2
+        done
+        
+        docker-compose up -d suitecrm
+        
+        # Wait for SuiteCRM
+        echo "Waiting for SuiteCRM..."
+        for i in {1..60}; do
+          if docker-compose exec -T suitecrm curl -f http://localhost/index.php > /dev/null 2>&1; then
+            break
+          fi
+          sleep 5
+        done
+        
+        # Run critical tests
+        set +e  # Don't exit on test failure
+        docker-compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/ConfigTest.php"
+        config_status=$?
+        
+        docker-compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/data/"
+        data_status=$?
+        
+        if [ $config_status -eq 0 ] && [ $data_status -eq 0 ]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+        fi
+        
+        # Cleanup
+        docker-compose down -v
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: ${{ needs.test.outputs.test_status == 'success' || github.event.inputs.force_deploy == 'true' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build the Docker image
+        docker build -f docker/suitecrm/Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker build -f docker/suitecrm/Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+        
+        # Push the images
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.5.0"
+
+    - name: Terraform Init
+      run: |
+        cd terraform
+        terraform init
+
+    - name: Terraform Plan
+      run: |
+        cd terraform
+        terraform plan \
+          -var="image_tag=${{ github.sha }}" \
+          -var="environment=staging" \
+          -out=tfplan
+
+    - name: Terraform Apply
+      run: |
+        cd terraform
+        terraform apply -auto-approve tfplan
+
+    - name: Wait for deployment
+      run: |
+        echo "Waiting for ECS service to stabilize..."
+        aws ecs wait services-stable \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --services ${{ env.ECS_SERVICE }} \
+          --region ${{ env.AWS_REGION }}
+
+    - name: Get service status
+      run: |
+        aws ecs describe-services \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --services ${{ env.ECS_SERVICE }} \
+          --region ${{ env.AWS_REGION }} \
+          --query 'services[0].{Status:status,RunningCount:runningCount,DesiredCount:desiredCount}'
+
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Deployment to staging successful!"
+          echo "Image: ${{ steps.build-image.outputs.image }}"
+        else
+          echo "❌ Deployment to staging failed!"
+        fi

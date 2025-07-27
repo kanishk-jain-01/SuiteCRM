@@ -1,0 +1,129 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, hotfix, develop ]
+  pull_request:
+    branches: [ main, hotfix, develop ]
+
+env:
+  DB_ROOT_PASSWORD: rootpass123
+  DB_USER: suitecrm
+  DB_PASSWORD: test_suite_123
+  DB_NAME: suitecrm
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ env.DB_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ env.DB_NAME }}
+          MYSQL_USER: ${{ env.DB_USER }}
+          MYSQL_PASSWORD: ${{ env.DB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build SuiteCRM container
+      run: |
+        docker-compose build suitecrm
+
+    - name: Start services
+      run: |
+        docker-compose up -d database
+        
+        # Wait for database to be ready
+        echo "Waiting for MySQL to be ready..."
+        for i in {1..30}; do
+          if docker-compose exec -T database mysqladmin ping -h localhost --silent; then
+            echo "MySQL is ready!"
+            break
+          fi
+          echo "Waiting for MySQL... ($i/30)"
+          sleep 2
+        done
+        
+        # Start SuiteCRM container
+        docker-compose up -d suitecrm
+
+    - name: Wait for SuiteCRM to be ready
+      run: |
+        echo "Waiting for SuiteCRM to be ready..."
+        for i in {1..60}; do
+          if docker-compose exec -T suitecrm curl -f http://localhost/index.php > /dev/null 2>&1; then
+            echo "SuiteCRM is ready!"
+            break
+          fi
+          echo "Waiting for SuiteCRM... ($i/60)"
+          sleep 5
+        done
+
+    - name: Run PHPUnit Unit Tests
+      run: |
+        echo "Running PHPUnit unit tests..."
+        
+        # Run core configuration tests
+        docker-compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/ConfigTest.php --verbose"
+        
+        # Run data layer tests
+        docker-compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/data/ --verbose"
+        
+        # Run includes/utilities tests
+        docker-compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/includes/ --verbose"
+        
+        # Run module tests (sample)
+        docker-compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/modules/Accounts/AccountTest.php --verbose"
+        docker-compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/modules/Users/UserTest.php --verbose"
+
+    - name: Run Code Quality Checks
+      run: |
+        echo "Running code quality checks..."
+        
+        # PHP CodeSniffer
+        docker-compose exec -T suitecrm vendor/bin/phpcs --standard=PSR2 --extensions=php --ignore=vendor/,cache/,upload/ --report=summary . || echo "PHPCS found issues (non-blocking)"
+        
+        # PHP Stan (static analysis)
+        docker-compose exec -T suitecrm vendor/bin/phpstan analyse --memory-limit=2G --no-progress || echo "PHPStan found issues (non-blocking)"
+
+    - name: Cleanup
+      if: always()
+      run: |
+        docker-compose down -v
+        docker system prune -f
+
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
