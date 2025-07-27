@@ -30,6 +30,7 @@ Add these secrets in your GitHub repository settings (Settings → Secrets and v
 ```
 AWS_ACCESS_KEY_ID       # AWS access key for deployment
 AWS_SECRET_ACCESS_KEY   # AWS secret key for deployment
+ADMIN_PASSWORD          # Admin password for SuiteCRM deployment
 ```
 
 ### Optional Secrets (if needed)
@@ -39,17 +40,26 @@ SUITECRM_CLIENT_ID     # OAuth client ID
 SUITECRM_CLIENT_SECRET # OAuth client secret
 ```
 
-## Environment Variables to Update
+## Current Configuration
 
-In `deploy-staging.yml`, update these values to match your AWS setup:
+The workflow is configured for your specific AWS setup:
 
 ```yaml
 env:
-  AWS_REGION: us-east-1           # Your AWS region
-  ECR_REPOSITORY: suitecrm-app    # Your ECR repository name
-  ECS_SERVICE: suitecrm-service   # Your ECS service name
-  ECS_CLUSTER: suitecrm-cluster   # Your ECS cluster name
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 787187109626
+  ECR_REPOSITORY_SUITECRM: suitecrm-staging-suitecrm
+  ECR_REPOSITORY_CHATBOT: suitecrm-staging-chatbot
 ```
+
+### Deployment Process
+The staging deployment mirrors your manual process:
+
+1. **Build Images**: Both SuiteCRM and Chatbot with `--platform=linux/amd64`
+2. **Tag for ECR**: Using your account ID and repository names
+3. **Push to ECR**: Both latest and commit-tagged versions
+4. **Run Terraform**: From `terraform/environments/staging` directory
+5. **Apply Changes**: With `admin_password` variable from secrets
 
 ## Testing the Setup
 

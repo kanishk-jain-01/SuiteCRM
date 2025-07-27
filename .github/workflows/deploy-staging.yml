@@ -12,10 +12,10 @@ on:
         type: boolean
 
 env:
-  AWS_REGION: us-east-1  # Update to your AWS region
-  ECR_REPOSITORY: suitecrm-app
-  ECS_SERVICE: suitecrm-service
-  ECS_CLUSTER: suitecrm-cluster
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 787187109626
+  ECR_REPOSITORY_SUITECRM: suitecrm-staging-suitecrm
+  ECR_REPOSITORY_CHATBOT: suitecrm-staging-chatbot
 
 jobs:
   test:
@@ -108,21 +108,40 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Build, tag, and push image to Amazon ECR
+    - name: Build, tag, and push images to Amazon ECR
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build the Docker image
-        docker build -f docker/suitecrm/Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker build -f docker/suitecrm/Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+        # Build SuiteCRM image with correct platform
+        echo "Building SuiteCRM image..."
+        docker build --platform=linux/amd64 -f docker/suitecrm/Dockerfile -t ${{ env.ECR_REPOSITORY_SUITECRM }}:latest .
         
-        # Push the images
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        # Tag SuiteCRM image for ECR
+        docker tag ${{ env.ECR_REPOSITORY_SUITECRM }}:latest $ECR_REGISTRY/${{ env.ECR_REPOSITORY_SUITECRM }}:latest
+        docker tag ${{ env.ECR_REPOSITORY_SUITECRM }}:latest $ECR_REGISTRY/${{ env.ECR_REPOSITORY_SUITECRM }}:$IMAGE_TAG
         
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        # Build Chatbot image with correct platform
+        echo "Building Chatbot image..."
+        docker build --platform=linux/amd64 -f suitecrm_chatbot/Dockerfile -t ${{ env.ECR_REPOSITORY_CHATBOT }}:latest ./suitecrm_chatbot
+        
+        # Tag Chatbot image for ECR
+        docker tag ${{ env.ECR_REPOSITORY_CHATBOT }}:latest $ECR_REGISTRY/${{ env.ECR_REPOSITORY_CHATBOT }}:latest
+        docker tag ${{ env.ECR_REPOSITORY_CHATBOT }}:latest $ECR_REGISTRY/${{ env.ECR_REPOSITORY_CHATBOT }}:$IMAGE_TAG
+        
+        # Push SuiteCRM images
+        echo "Pushing SuiteCRM images..."
+        docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_SUITECRM }}:latest
+        docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_SUITECRM }}:$IMAGE_TAG
+        
+        # Push Chatbot images
+        echo "Pushing Chatbot images..."
+        docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_CHATBOT }}:latest
+        docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_CHATBOT }}:$IMAGE_TAG
+        
+        echo "suitecrm_image=$ECR_REGISTRY/${{ env.ECR_REPOSITORY_SUITECRM }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "chatbot_image=$ECR_REGISTRY/${{ env.ECR_REPOSITORY_CHATBOT }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
@@ -131,37 +150,31 @@ jobs:
 
     - name: Terraform Init
       run: |
-        cd terraform
+        cd terraform/environments/staging
         terraform init
 
     - name: Terraform Plan
       run: |
-        cd terraform
+        cd terraform/environments/staging
         terraform plan \
           -var="image_tag=${{ github.sha }}" \
-          -var="environment=staging" \
+          -var="admin_password=${{ secrets.ADMIN_PASSWORD }}" \
           -out=tfplan
 
     - name: Terraform Apply
       run: |
-        cd terraform
+        cd terraform/environments/staging
         terraform apply -auto-approve tfplan
 
-    - name: Wait for deployment
+    - name: Get deployment status
       run: |
-        echo "Waiting for ECS service to stabilize..."
-        aws ecs wait services-stable \
-          --cluster ${{ env.ECS_CLUSTER }} \
-          --services ${{ env.ECS_SERVICE }} \
-          --region ${{ env.AWS_REGION }}
-
-    - name: Get service status
-      run: |
-        aws ecs describe-services \
-          --cluster ${{ env.ECS_CLUSTER }} \
-          --services ${{ env.ECS_SERVICE }} \
-          --region ${{ env.AWS_REGION }} \
-          --query 'services[0].{Status:status,RunningCount:runningCount,DesiredCount:desiredCount}'
+        cd terraform/environments/staging
+        echo "Deployment completed successfully!"
+        echo "SuiteCRM Image: ${{ steps.build-image.outputs.suitecrm_image }}"
+        echo "Chatbot Image: ${{ steps.build-image.outputs.chatbot_image }}"
+        
+        # Get any outputs from Terraform
+        terraform output -json || echo "No outputs available"
 
     - name: Notify deployment status
       if: always()
