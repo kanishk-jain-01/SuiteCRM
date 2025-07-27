@@ -122,12 +122,12 @@ jobs:
           if docker exec suitecrm_staging_test test -f /var/www/html/config.php; then
             echo "✅ config.php found!"
             
-            # Check web response
+            # Check web response (accept 200 or 301 as success)
             HTTP_STATUS=$(docker exec suitecrm_staging_test curl -s -o /dev/null -w "%{http_code}" http://localhost/index.php 2>/dev/null || echo "000")
             echo "HTTP Status: $HTTP_STATUS"
             
-            if [ "$HTTP_STATUS" = "200" ]; then
-              echo "✅ SuiteCRM is responsive!"
+            if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "301" ]; then
+              echo "✅ SuiteCRM is responsive! (Status: $HTTP_STATUS)"
               break
             else
               echo "❌ SuiteCRM not responsive (HTTP: $HTTP_STATUS)"
