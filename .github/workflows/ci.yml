@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, hotfix, develop ]
+    branches: [ main, development ]
   pull_request:
-    branches: [ main, hotfix, develop ]
+    branches: [ main, development ]
 
 env:
   DB_ROOT_PASSWORD: rootpass123
