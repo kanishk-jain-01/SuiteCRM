@@ -6,16 +6,18 @@
 - **Triggers**: Push/PR to `main`, `hotfix`, `develop` branches
 - **Purpose**: Run tests and code quality checks
 - **Features**:
-  - PHPUnit unit tests
+  - Automated SuiteCRM silent installation in container
+  - PHPUnit unit tests on fully installed system
   - Code quality checks (PHPCS, PHPStan)
   - Security scanning with Trivy
-  - Docker-based testing environment
+  - Docker-based testing environment with GitHub Actions MySQL
 
 ### 2. Staging Deployment (`deploy-staging.yml`)
 - **Triggers**: Push to `staging` branch or manual dispatch
 - **Purpose**: Deploy to AWS staging environment
 - **Features**:
-  - Run tests before deployment
+  - Automated SuiteCRM silent installation for testing
+  - Run tests before deployment with quality gates
   - Build and push Docker images to ECR
   - Deploy using Terraform
   - Force deployment option for manual runs

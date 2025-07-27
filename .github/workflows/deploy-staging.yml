@@ -33,38 +33,49 @@ jobs:
     - name: Build and test
       id: test_result
       run: |
-        # Build the container
-        docker compose build suitecrm
+        # Build the image
+        docker build -f docker/suitecrm/Dockerfile -t suitecrm:staging-test .
         
-        # Start services
-        docker compose up -d database
+        # Start SuiteCRM container with silent install environment variables
+        docker run -d \
+          --name suitecrm_staging_test \
+          --add-host host.docker.internal:host-gateway \
+          -e DB_HOST=127.0.0.1 \
+          -e DB_NAME=suitecrm \
+          -e DB_USER=suitecrm \
+          -e DB_PASSWORD=test_suite_123 \
+          -e SITE_URL=http://localhost \
+          -e SYSTEM_NAME="SuiteCRM Staging Test" \
+          -e ADMIN_USERNAME=admin \
+          -e ADMIN_PASSWORD=admin123 \
+          -e OPENAI_API_KEY="" \
+          -e SUITECRM_CLIENT_ID="" \
+          -e SUITECRM_CLIENT_SECRET="" \
+          -e SUITECRM_USERNAME="" \
+          -e SUITECRM_PASSWORD="" \
+          --network host \
+          suitecrm:staging-test
         
-        # Wait for database
-        echo "Waiting for MySQL..."
-        for i in {1..30}; do
-          if docker compose exec -T database mysqladmin ping -h localhost --silent; then
-            break
+        # Wait for SuiteCRM installation to complete
+        echo "Waiting for SuiteCRM silent installation..."
+        for i in {1..120}; do
+          if docker exec suitecrm_staging_test test -f /var/www/html/config.php; then
+            echo "SuiteCRM installation complete"
+            if docker exec suitecrm_staging_test curl -f http://localhost/index.php > /dev/null 2>&1; then
+              echo "SuiteCRM is responsive"
+              break
+            fi
           fi
-          sleep 2
-        done
-        
-        docker compose up -d suitecrm
-        
-        # Wait for SuiteCRM
-        echo "Waiting for SuiteCRM..."
-        for i in {1..60}; do
-          if docker compose exec -T suitecrm curl -f http://localhost/index.php > /dev/null 2>&1; then
-            break
-          fi
+          echo "Waiting for installation... ($i/120)"
           sleep 5
         done
         
         # Run critical tests
         set +e  # Don't exit on test failure
-        docker compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/ConfigTest.php"
+        docker exec suitecrm_staging_test bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/ConfigTest.php"
         config_status=$?
         
-        docker compose exec -T suitecrm bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/data/"
+        docker exec suitecrm_staging_test bash -c "cd tests && ../vendor/bin/phpunit unit/phpunit/data/"
         data_status=$?
         
         if [ $config_status -eq 0 ] && [ $data_status -eq 0 ]; then
@@ -74,7 +85,8 @@ jobs:
         fi
         
         # Cleanup
-        docker compose down -v
+        docker stop suitecrm_staging_test || true
+        docker rm suitecrm_staging_test || true
 
   deploy:
     needs: test
