@@ -4,8 +4,9 @@ import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 import uvicorn
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from agent import create_suitecrm_agent, SuiteCRMAgent
 from config import config
@@ -31,6 +32,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Router with API prefix to support ALB path /api/chatbot/*
+router = APIRouter(prefix="/api/chatbot")
 
 # Global agent instance
 _agent: Optional[SuiteCRMAgent] = None
@@ -111,6 +115,11 @@ async def health_check():
         agent_ready=agent_ready
     )
 
+@router.get("/health", response_model=HealthResponse)
+async def prefixed_health_check():
+    """Health check endpoint (prefixed)."""
+    return await health_check()
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """Chat with the SuiteCRM assistant."""
@@ -133,6 +142,11 @@ async def chat(request: ChatRequest):
             status_code=500,
             detail=f"Error processing chat request: {str(e)}"
         )
+
+@router.post("/chat", response_model=ChatResponse)
+async def prefixed_chat(request: ChatRequest):
+    """Chat endpoint with prefix."""
+    return await chat(request)
 
 @app.post("/accounts/create")
 async def create_account_direct(request: AccountCreateRequest):
@@ -278,14 +292,17 @@ async def root():
         }
     }
 
+# Include the router **after** its routes are declared so they are registered
+app.include_router(router)
+
 # Error handlers
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
-    return {"error": "Endpoint not found", "status_code": 404}
+    return JSONResponse(status_code=404, content={"error": "Endpoint not found"})
 
 @app.exception_handler(500)
 async def internal_error_handler(request, exc):
-    return {"error": "Internal server error", "status_code": 500}
+    return JSONResponse(status_code=500, content={"error": "Internal server error"})
 
 if __name__ == "__main__":
     uvicorn.run(
