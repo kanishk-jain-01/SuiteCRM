@@ -15,6 +15,12 @@ variable "default_tags" {
   }
 }
 
+variable "image_tag" {
+  description = "Docker image tag to deploy"
+  type        = string
+  default     = "latest"
+}
+
 variable "openai_api_key" {
   description = "OpenAI API key for chatbot"
   type        = string

@@ -49,6 +49,9 @@ module "suitecrm" {
   ecr_repository_url = "787187109626.dkr.ecr.us-east-1.amazonaws.com/suitecrm-staging-suitecrm"
   chatbot_ecr_repository_url = "787187109626.dkr.ecr.us-east-1.amazonaws.com/suitecrm-staging-chatbot"
   
+  # Image tag for deployments
+  image_tag = var.image_tag
+  
   # Secrets (will be set via environment variables)
   openai_api_key = var.openai_api_key
   suitecrm_client_id = var.suitecrm_client_id
