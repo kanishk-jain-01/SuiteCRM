@@ -426,7 +426,7 @@ resource "aws_ecs_task_definition" "chatbot" {
       environment = [
         {
           name  = "SUITECRM_BASE_URL"
-          value = "https://${var.domain_name != "" ? var.domain_name : aws_lb.main.dns_name}/Api/V8"
+          value = "http://${aws_lb.main.dns_name}/Api/V8/"
         },
         {
           name  = "LOG_LEVEL"

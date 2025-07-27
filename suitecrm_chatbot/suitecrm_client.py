@@ -28,7 +28,7 @@ class SuiteCRMClient:
             return self.access_token
             
         async with httpx.AsyncClient() as client:
-            token_url = f"{self.base_url.replace('/V8', '')}/access_token"
+            token_url = f"{self.base_url.rstrip('/').replace('/V8', '')}/access_token"
             
             data = {
                 "grant_type": "password",
@@ -51,7 +51,7 @@ class SuiteCRMClient:
                 return self.access_token
                 
             except httpx.HTTPStatusError as e:
-                logger.error(f"Failed to get access token: {e.response.text}")
+                logger.error(f"Failed to get access token: HTTP {e.response.status_code} - {e.response.text}")
                 raise Exception(f"Authentication failed: {e.response.text}")
             except Exception as e:
                 logger.error(f"Error getting access token: {str(e)}")
@@ -59,6 +59,7 @@ class SuiteCRMClient:
     
     async def _make_request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
         """Make authenticated request to SuiteCRM API."""
+        
         token = await self._get_access_token()
         
         headers = {
@@ -72,17 +73,20 @@ class SuiteCRMClient:
             
         kwargs["headers"] = headers
         
+        # Fix double slash issue
+        full_url = f"{self.base_url.rstrip('/')}/{endpoint.lstrip('/')}"
+        
         async with httpx.AsyncClient() as client:
             try:
-                response = await client.request(method, f"{self.base_url}{endpoint}", **kwargs)
+                response = await client.request(method, full_url, **kwargs)
                 response.raise_for_status()
                 return response.json()
                 
             except httpx.HTTPStatusError as e:
-                logger.error(f"API request failed: {e.response.text}")
+                logger.error(f"API request failed: {method} {e.request.url} - HTTP {e.response.status_code}: {e.response.text}")
                 raise Exception(f"API request failed: {e.response.text}")
             except Exception as e:
-                logger.error(f"Error making request: {str(e)}")
+                logger.error(f"Error making {method} request to {full_url}: {str(e)}")
                 raise
     
     async def create_account(self, account_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -103,7 +107,8 @@ class SuiteCRMClient:
         
         logger.info(f"Creating account with data: {account_data}")
         result = await self._make_request("POST", "/module", json=payload)
-        logger.info(f"Account created successfully: {result.get('data', {}).get('id')}")
+        account_id = result.get('data', {}).get('id')
+        logger.info(f"Account '{account_data.get('name')}' created successfully with ID: {account_id}")
         return result
     
     async def get_account(self, account_id: str) -> Dict[str, Any]:
