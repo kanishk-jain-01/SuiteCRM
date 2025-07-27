@@ -79,6 +79,8 @@
     <script type="text/javascript" src='{sugar_getjspath file="themes/SuiteP/js/jscolor.js"}'></script>
     <script type="text/javascript" src='{sugar_getjspath file="cache/include/javascript/sugar_field_grp.js"}'></script>
     <script type="text/javascript" src='{sugar_getjspath file="vendor/tinymce/tinymce/tinymce.min.js"}'></script>
-    <!-- SuiteCRM Chat Assistant -->
+    {if $AUTHENTICATED}
+    <!-- SuiteCRM Chat Assistant - Only load for authenticated users -->
     <script type="text/javascript" src='{sugar_getjspath file="themes/SuiteP/js/chatbot/embed_snippet.js"}'></script>
+    {/if}
 </head>
