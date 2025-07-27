@@ -48,10 +48,10 @@ jobs:
         DB_PASSWORD=${{ env.DB_PASSWORD }}
         EOF
 
-    - name: Build SuiteCRM container
+    - name: Build SuiteCRM image
       run: |
-        # Modify docker-compose to use host networking for database connection
-        docker compose build suitecrm
+        # Build the image directly with docker build
+        docker build -f docker/suitecrm/Dockerfile -t suitecrm:test .
 
     - name: Start SuiteCRM container
       run: |
@@ -71,7 +71,7 @@ jobs:
           -e PHP_MEMORY_LIMIT=512M \
           -e PHP_UPLOAD_MAX_FILESIZE=50M \
           -e PHP_POST_MAX_SIZE=50M \
-          suitecrm_suitecrm:latest
+          suitecrm:test
 
     - name: Wait for SuiteCRM to be ready
       run: |
