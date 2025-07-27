@@ -445,7 +445,7 @@ resource "aws_ecs_task_definition" "chatbot" {
       secrets = [
         {
           name      = "OPENAI_API_KEY"
-          valueFrom = "${aws_secretsmanager_secret.openai_api_key.arn}::"
+          valueFrom = aws_secretsmanager_secret.openai_api_key.arn
         },
         {
           name      = "SUITECRM_CLIENT_ID"
