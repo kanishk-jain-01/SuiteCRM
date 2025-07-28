@@ -153,6 +153,28 @@ resource "aws_efs_access_point" "logs" {
   })
 }
 
+resource "aws_efs_access_point" "config_persistence" {
+  file_system_id = aws_efs_file_system.main.id
+  
+  posix_user {
+    gid = 33  # www-data group
+    uid = 33  # www-data user
+  }
+  
+  root_directory {
+    path = "/config-persistence"
+    creation_info {
+      owner_gid   = 33
+      owner_uid   = 33
+      permissions = "0755"
+    }
+  }
+  
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-efs-config-persistence"
+  })
+}
+
 resource "aws_efs_access_point" "chatbot_logs" {
   file_system_id = aws_efs_file_system.main.id
   

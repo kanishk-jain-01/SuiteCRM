@@ -68,6 +68,7 @@ module "ecs" {
   efs_access_point_uploads_id = module.storage.efs_access_point_uploads_id
   efs_access_point_cache_id = module.storage.efs_access_point_cache_id
   efs_access_point_logs_id = module.storage.efs_access_point_logs_id
+  efs_access_point_config_persistence_id = module.storage.efs_access_point_config_persistence_id
   efs_access_point_chatbot_logs_id = module.storage.efs_access_point_chatbot_logs_id
   
   # S3 bucket

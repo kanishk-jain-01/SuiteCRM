@@ -78,6 +78,12 @@ variable "efs_access_point_logs_id" {
   default     = ""
 }
 
+variable "efs_access_point_config_persistence_id" {
+  description = "ID of the EFS access point for config persistence"
+  type        = string
+  default     = ""
+}
+
 variable "efs_access_point_chatbot_logs_id" {
   description = "ID of the EFS access point for chatbot logs"
   type        = string

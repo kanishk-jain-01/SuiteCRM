@@ -351,6 +351,10 @@ resource "aws_ecs_task_definition" "suitecrm" {
         {
           sourceVolume  = "logs"
           containerPath = "/var/www/html/logs"
+        },
+        {
+          sourceVolume  = "config-persistence"
+          containerPath = "/var/www/html/config-persistence"
         }
       ]
       
@@ -393,6 +397,14 @@ resource "aws_ecs_task_definition" "suitecrm" {
   
   volume {
     name = "logs"
+    efs_volume_configuration {
+      file_system_id          = var.efs_file_system_id
+      transit_encryption      = "ENABLED"
+    }
+  }
+  
+  volume {
+    name = "config-persistence"
     efs_volume_configuration {
       file_system_id          = var.efs_file_system_id
       transit_encryption      = "ENABLED"

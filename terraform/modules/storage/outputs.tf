@@ -33,6 +33,11 @@ output "efs_access_point_logs_id" {
   value       = aws_efs_access_point.logs.id
 }
 
+output "efs_access_point_config_persistence_id" {
+  description = "ID of the EFS access point for config persistence"
+  value       = aws_efs_access_point.config_persistence.id
+}
+
 output "efs_access_point_chatbot_logs_id" {
   description = "ID of the EFS access point for chatbot logs"
   value       = aws_efs_access_point.chatbot_logs.id
